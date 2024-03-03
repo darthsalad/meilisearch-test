@@ -5,6 +5,7 @@ from openai import AzureOpenAI
 from typing import List
 from uuid import uuid4
 import json
+import time
 import os
 
 load_dotenv()
@@ -29,6 +30,7 @@ def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmb
     
     new_id = uuid4()
     content_embedding = embeddings.embed_query(f"{file['name']}\n\n{file['content']}")
+    time.sleep(5)
 
     new_dict = {
         "id": str(new_id),
