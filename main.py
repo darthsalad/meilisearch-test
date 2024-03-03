@@ -18,12 +18,13 @@ load_dotenv()
 SEARCH_URL = os.environ.get("SEARCH_HTTP_ADDR")
 SEARCH_KEY = os.environ.get("SEARCH_MASTER_KEY")
 
-DEPLOYMENT_NAME = os.environ.get("DEPLOYMENT_NAME")
 
+DEPLOYMENT_NAME = os.environ.get("DEPLOYMENT_NAME_1")
 API_VERSION = os.environ.get("API_VERSION_1")
 API_KEY = os.environ.get("API_KEY_1")
 AZURE_ENDPOINT = os.environ.get("AZURE_ENDPOINT_1")
 
+DEPLOYMENT_NAME_2 = os.environ.get("DEPLOYMENT_NAME_2")
 API_KEY_2 = os.environ.get("API_KEY_2")
 API_VERSION_2 = os.environ.get("API_VERSION_2")
 AZURE_ENDPOINT_2 = os.environ.get("AZURE_ENDPOINT_2")
@@ -42,7 +43,7 @@ embeddings_1 = AzureOpenAIEmbeddings(
 )
 
 embeddings_2 = AzureOpenAIEmbeddings(
-    azure_deployment=DEPLOYMENT_NAME,
+    azure_deployment=DEPLOYMENT_NAME_2,
     openai_api_version=API_VERSION_2,
     api_key=API_KEY_2,
     azure_endpoint=AZURE_ENDPOINT_2,
