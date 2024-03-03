@@ -85,22 +85,28 @@ async def add_kb(request: Request):
 
     timer = time.time()
 
-    generate_embeddings(files, project, email, embeddings_array=[embeddings_1, embeddings_2])
-    print(f"Time taken to generate embeddings: {time.time() - timer} seconds")
+    try:
+        generate_embeddings(files, project, email, embeddings_array=[embeddings_1, embeddings_2])
+        print(f"Time taken to generate embeddings: {time.time() - timer} seconds")
 
-    time.sleep(1)
+        time.sleep(1)
 
-    upload_to_index(client, index, "temp.json")
-    print(f"Time taken to add documents: {time.time() - timer} seconds")
+        upload_to_index(client, index, "temp.json")
+        print(f"Time taken to add documents: {time.time() - timer} seconds")
 
-    os.remove("temp.json")
+        os.remove("temp.json")
 
-    update_index_settings(index)
-    print(f"Time taken to update settings: {time.time() - timer} seconds")
+        update_index_settings(index)
+        print(f"Time taken to update settings: {time.time() - timer} seconds")
 
-    return {
-        "message": "Content added successfully"
-    }
+        return {
+            "message": "Content added successfully"
+        }
+    except Exception as e:
+        return {
+            "message": "Error",
+            "error": str(e)
+        }
 
 
 @app.post("/search")
@@ -112,77 +118,89 @@ async def search(request: Request):
     project = data["project"]
     index = data["index"]
 
-    query_embeddings = embeddings_1.embed_query(query)
+    try:
+        query_embeddings = embeddings_1.embed_query(query)
 
-    request = requests.post(
-        f"{SEARCH_URL}/indexes/{index}/search",
-        data=json.dumps({
-            "vector": query_embeddings, 
-            "filter": [
-                f"project = {project}"
-            ],
-            "limit": 5,
-        }),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {SEARCH_KEY}",
-        },
-        verify=False
-    )
-
-    result = request.json()
-
-    hits = []
-
-    for hit in result["hits"]:
-        hits.append(
-            {
-                "id": hit["id"],
-                "file_path": hit["file_path"],
-                "score": hit["_semanticScore"] if "_semanticScore" in hit else 0,
-            }
+        request = requests.post(
+            f"{SEARCH_URL}/indexes/{index}/search",
+            data=json.dumps({
+                "vector": query_embeddings, 
+                "filter": [
+                    f"project = {project}"
+                ],
+                "limit": 5,
+            }),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {SEARCH_KEY}",
+            },
+            verify=False
         )
 
-    print("Time taken:", time.time() - timer)
+        result = request.json()
 
-    return {
-        "query": query,
-        "project": project,
-        "results": hits,
-    }
+        hits = []
+
+        for hit in result["hits"]:
+            hits.append(
+                {
+                    "id": hit["id"],
+                    "file_path": hit["file_path"],
+                    "score": hit["_semanticScore"] if "_semanticScore" in hit else 0,
+                }
+            )
+
+        print("Time taken:", time.time() - timer)
+
+        return {
+            "query": query,
+            "project": project,
+            "results": hits,
+        }
+    except Exception as e:
+        return {
+            "message": "Error",
+            "error": str(e)
+        }
 
 
 @app.get("/search")
 def search_internet(q: str):
     start_time_main = time.time()
-    res = get_google_search_results(q)
-    
-    google_results_time = str(time.time() - start_time_main)
-    print(f"Google results time: {google_results_time}")
+    try:
+        res = get_google_search_results(q)
+        
+        google_results_time = str(time.time() - start_time_main)
+        print(f"Google results time: {google_results_time}")
 
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        # Start a future for each of the first 5 search results
-        futures = [
-            executor.submit(
-                navigate_and_extract,
-                drivers[i],
-                res["organic_search_results"][i]["link"],
-            )
-            for i in range(5)
-        ]
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            # Start a future for each of the first 5 search results
+            futures = [
+                executor.submit(
+                    navigate_and_extract,
+                    drivers[i],
+                    res["organic_search_results"][i]["link"],
+                )
+                for i in range(5)
+            ]
 
-        # Wait for all futures to complete and collect the results
-        contents = [future.result() for future in futures]
+            # Wait for all futures to complete and collect the results
+            contents = [future.result() for future in futures]
 
-    generate_embedding_time = str(time.time() - start_time_main)
-    print(f"Generate embedding time: {generate_embedding_time}")
+        generate_embedding_time = str(time.time() - start_time_main)
+        print(f"Generate embedding time: {generate_embedding_time}")
 
-    top_3 = similarity_search(q, contents)
-    # Print total time and quit all the drivers
-    complete_end_time = str(time.time() - start_time_main)
-    print(f"Complete end time: {complete_end_time}")
+        top_3 = similarity_search(q, contents)
+        # Print total time and quit all the drivers
+        complete_end_time = str(time.time() - start_time_main)
+        print(f"Complete end time: {complete_end_time}")
 
-    return {
-        "top_3": top_3,
-        "links": [res["organic_search_results"][i]["link"] for i in range(3)],
-    }
+        return {
+            "top_3": top_3,
+            "links": [res["organic_search_results"][i]["link"] for i in range(3)],
+        }
+    except Exception as e:
+        return {
+            "message": "Error",
+            "error": str(e)
+        }

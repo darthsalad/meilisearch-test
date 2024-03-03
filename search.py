@@ -4,8 +4,8 @@ import os
 
 def upload_to_index(client, index_name, file_name):
     if index_name and file_name:
-        json_file = open(file_name, encoding='utf-8')
-        data = json.load(json_file)
+        with open(file_name, "r", encoding="utf-8") as f:
+            data = json.load(f)
         client.index(index_name).add_documents(data)
         return {
             "response": "success",
