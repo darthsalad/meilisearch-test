@@ -436,11 +436,6 @@ def get_google_search_results(query):
     }
 
 
-def gen_embedding(text):
-    embedding = client.embeddings.create(input=text, model="embeddings")
-    return embedding.data[0].embedding
-
-
 def gen_desc_embeddings(results):
     organic_search_results = results.get("organic_search_results", [])
 

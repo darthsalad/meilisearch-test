@@ -184,4 +184,5 @@ def search_internet(q: str):
 
     return {
         "top_3": top_3,
+        "links": [res["organic_search_results"][i]["link"] for i in range(3)],
     }
