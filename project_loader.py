@@ -27,10 +27,10 @@ def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmb
     global i
     i += 1
     print(f"{i}  ::  ", file["name"])
+    time.sleep(5)
     
     new_id = uuid4()
     content_embedding = embeddings.embed_query(f"{file['name']}\n\n{file['content']}")
-    time.sleep(5)
 
     new_dict = {
         "id": str(new_id),
