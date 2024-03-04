@@ -3,14 +3,18 @@ import json
 import os
 
 def upload_to_index(client, index_name, file_name):
-    if index_name:
-        with open(file_name, "r") as f:
-            data = json.load(f)
+    try:
+        if index_name:
+            with open(file_name, "r") as f:
+                data = json.load(f)
 
-        client.index(index_name).add_documents(data)
-        print("Documents added successfully.")
-    else:
-        raise Exception("Index name and file name are required.")
+            client.index(index_name).add_documents(data)
+            print("Documents added successfully.")
+        else:
+            raise Exception("Index name and file name are required.")
+    except Exception as e:
+        print(e)
+        raise Exception("Failed to upload documents.")
 
 
 def update_index_settings(index_name):
@@ -35,7 +39,7 @@ def update_index_settings(index_name):
         response = requests.patch(url, headers=headers, data=json.dumps(data))
         print("Settings updated successfully.", response.text)
     except Exception as e:    
-        print(str(e))
+        print(e)
         raise Exception("Failed to update settings.")
 
 

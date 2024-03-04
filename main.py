@@ -18,7 +18,6 @@ load_dotenv()
 SEARCH_URL = os.environ.get("SEARCH_HTTP_ADDR")
 SEARCH_KEY = os.environ.get("SEARCH_MASTER_KEY")
 
-
 DEPLOYMENT_NAME = os.environ.get("DEPLOYMENT_NAME_1")
 API_VERSION = os.environ.get("API_VERSION_1")
 API_KEY = os.environ.get("API_KEY_1")
@@ -103,7 +102,7 @@ async def add_kb(request: Request):
             "message": "Content added successfully"
         }
     except Exception as e:
-        print(str(e))
+        print(e)
 
         return {
             "message": "Error",
@@ -114,17 +113,16 @@ async def add_kb(request: Request):
 @app.post("/search")
 async def search(request: Request):
     timer = time.time()
-    data = await request.json()
-
-    projects = []
-    
-    query = data["query"]
-    index = data["index"]
-    projects.extend(data["projects"])
-
-    queries_array = []
-
     try:
+        data = await request.json()
+        
+        email = data["email"]
+        query = data["query"]
+        index = data["index"]
+        projects = data["projects"]
+
+        queries_array = []
+
         query_embeddings = embeddings_1.embed_query(query)
 
         for project in projects:
@@ -132,25 +130,26 @@ async def search(request: Request):
                 {
                     "vector": query_embeddings,
                     "filter": [
-                        f"project = {project}"
+                        f"project = {project}",
+                        f"email = {email}"
                     ],
                     "limit": 5,
                 }
             )
 
-        request = requests.post(
+        req = requests.post(
             f"{SEARCH_URL}/indexes/{index}/multi-search",
             data=json.dumps({
-                "queries": queries_array,
+                "queries": queries_array
             }),
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {SEARCH_KEY}",
-            },
-            verify=False
+            }
         )
-
-        results = request.json()
+        
+        print(f"Time taken to search: {time.time() - timer} seconds")
+        results = req.json()
         hits = []
 
         for result in results["results"]:
@@ -173,7 +172,7 @@ async def search(request: Request):
             "results": hits,
         }
     except Exception as e:
-        print(str(e))
+        print(e)
 
         return {
             "message": "Error",
@@ -217,7 +216,7 @@ def search_internet(q: str):
             "links": [res["organic_search_results"][i]["link"] for i in range(3)],
         }
     except Exception as e:
-        print(str(e))
+        print(e)
 
         return {
             "message": "Error",

@@ -47,7 +47,7 @@ def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmb
 
         return new_dict
     except Exception as e:
-        print(str(e))
+        print(e)
         raise Exception("Failed to generate embeddings.")
 
 def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenAIEmbeddings]):
@@ -67,7 +67,7 @@ def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenA
         
         i = 0
     except Exception as e:
-        print(str(e))
+        print(e)
         raise Exception("Failed to generate embeddings.")
 
 
