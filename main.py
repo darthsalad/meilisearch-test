@@ -158,8 +158,8 @@ def get_search_results(vectors, index, project, email):
                 {
                     "vector": vectors,
                     "filter": [
-                        f"project = {project}", 
-                        f"email = {email}"
+                        f"project = '{project}'", 
+                        f"email = '{email}'"
                     ],
                     "limit": 5,
                 }
@@ -171,9 +171,9 @@ def get_search_results(vectors, index, project, email):
             verify=False,
         )
 
-        response = request.json()
+        res = request.json()
 
-        for hit in response["hits"]:
+        for hit in res["hits"]:
             results.append(
                 {
                     "id": hit["id"],
