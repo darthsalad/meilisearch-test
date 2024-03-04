@@ -11,11 +11,8 @@ def upload_to_index(client, index_name, file_name):
             "response": "success",
             "message": "index created successfully."
         }
-    return {
-        "response": "error",
-        "error": "400",
-        "message": "please provide the name for the index and also the file."
-    }
+    else:
+        raise Exception("Index name and file name are required.")
 
 
 def update_index_settings(index_name):
@@ -43,6 +40,7 @@ def update_index_settings(index_name):
     else:
         print("Failed to update settings. Status code:", response.status_code)
         print(response.text)
+        raise Exception("Failed to update settings.")
 
 
 # def task_update():

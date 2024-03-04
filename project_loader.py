@@ -29,35 +29,46 @@ def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmb
     print(f"{i}  ::  ", file["name"])
     time.sleep(5)
     
-    new_id = uuid4()
-    content_embedding = embeddings.embed_query(f"{file['name']}\n\n{file['content']}")
+    try:
+        new_id = uuid4()
+        content_embedding = embeddings.embed_query(f"{file['name']}\n\n{file['content']}")
 
-    new_dict = {
-        "id": str(new_id),
-        "file_path": file["name"],
-        "file_content": file["content"],
-        "dependency": file["dependency"],
-        "loc": file["loc"],
-        # "keywords": generate_keywords(file["content"]),
-        "_vectors": {"custom": content_embedding},
-        "project": project,
-        "email": email,
-    }
+        new_dict = {
+            "id": str(new_id),
+            "file_path": file["name"],
+            "file_content": file["content"],
+            "dependency": file["dependency"],
+            "loc": file["loc"],
+            # "keywords": generate_keywords(file["content"]),
+            "_vectors": {"custom": content_embedding},
+            "project": project,
+            "email": email,
+        }
 
-    return new_dict
-
+        return new_dict
+    except Exception as e:
+        print(str(e))
+        raise Exception("Failed to generate embeddings.")
 
 def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenAIEmbeddings]):
+    global i
+    
     chunk_array = []
 
-    with ThreadPoolExecutor(max_workers=30) as executor:
-        futures = [executor.submit(generate_embedding_for_file, file, project, email, embeddings_array[index % 2]) for index, file in enumerate(files)]
+    try:
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            futures = [executor.submit(generate_embedding_for_file, file, project, email, embeddings_array[index % 2]) for index, file in enumerate(files)]
 
-        for futures in as_completed(futures):
-            chunk_array.append(futures.result())
+            for futures in as_completed(futures):
+                chunk_array.append(futures.result())
 
-    with open("temp.json", "w", encoding="utf-8") as outfile:
-        json.dump(chunk_array, outfile)
+        with open("temp.json", "w", encoding="utf-8") as outfile:
+            json.dump(chunk_array, outfile)
+        
+        i = 0
+    except Exception as e:
+        print(str(e))
+        raise Exception("Failed to generate embeddings.")
 
 
 # def generate_keywords(content):

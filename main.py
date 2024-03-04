@@ -103,6 +103,8 @@ async def add_kb(request: Request):
             "message": "Content added successfully"
         }
     except Exception as e:
+        print(str(e))
+        
         return {
             "message": "Error",
             "error": str(e)
@@ -158,6 +160,8 @@ async def search(request: Request):
             "results": hits,
         }
     except Exception as e:
+        print(str(e))
+        
         return {
             "message": "Error",
             "error": str(e)
@@ -200,6 +204,8 @@ def search_internet(q: str):
             "links": [res["organic_search_results"][i]["link"] for i in range(3)],
         }
     except Exception as e:
+        print(str(e))
+        
         return {
             "message": "Error",
             "error": str(e)
