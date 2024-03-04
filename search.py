@@ -2,11 +2,11 @@ import requests
 import json
 import os
 
-def upload_to_index(client, index_name, file_name):
-    if index_name and file_name:
-        with open(file_name, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        client.index(index_name).add_documents(data)
+def upload_to_index(client, index_name, docs_array):
+    if index_name:
+        # with open(file_name, "r", encoding="utf-8") as f:
+        #     data = json.load(f)
+        client.index(index_name).add_documents(docs_array)
         print("Documents added successfully.")
     else:
         raise Exception("Index name and file name are required.")

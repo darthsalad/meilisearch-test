@@ -86,12 +86,12 @@ async def add_kb(request: Request):
     timer = time.time()
 
     try:
-        generate_embeddings(files, project, email, embeddings_array=[embeddings_1, embeddings_2])
+        embeddings_array = generate_embeddings(files, project, email, embeddings_array=[embeddings_1, embeddings_2])
         print(f"Time taken to generate embeddings: {time.time() - timer} seconds")
 
         time.sleep(1)
 
-        upload_to_index(client, index, "temp.json")
+        upload_to_index(client, index, embeddings_array)
         print(f"Time taken to add documents: {time.time() - timer} seconds")
 
         os.remove("temp.json")
