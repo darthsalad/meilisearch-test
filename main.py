@@ -147,7 +147,9 @@ async def search(request: Request):
             hits.append(
                 {
                     "id": hit["id"],
-                    "file_path": hit["file_path"],
+                    "file": hit["file_path"],
+                    "content": hit["file_content"],
+                    "loc": hit["loc"],
                     "score": hit["_semanticScore"] if "_semanticScore" in hit else 0,
                 }
             )
