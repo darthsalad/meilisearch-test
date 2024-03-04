@@ -127,7 +127,7 @@ async def search(request: Request):
 
         hits = []
         
-        with ThreadPoolExecutor(max_workers=len(projects)) as executor:
+        with ThreadPoolExecutor() as executor:
             futures = [executor.submit(get_search_results, query_embeddings, index, project, email) for project in projects]
 
             for future in as_completed(futures):
@@ -150,7 +150,7 @@ async def search(request: Request):
 
 def get_search_results(vectors, index, project, email):
     try:
-        hits = []
+        results = []
 
         request = requests.post(
             f"{SEARCH_URL}/indexes/{index}/search",
@@ -174,7 +174,7 @@ def get_search_results(vectors, index, project, email):
         response = request.json()
 
         for hit in response["hits"]:
-            hits.append(
+            results.append(
                 {
                     "id": hit["id"],
                     "file": hit["file_path"],
@@ -184,7 +184,7 @@ def get_search_results(vectors, index, project, email):
                 }
             )
 
-        return hits
+        return results
     except Exception as e:
         print(e)
         raise Exception("Failed to get search results.")
