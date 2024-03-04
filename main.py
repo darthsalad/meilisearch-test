@@ -152,7 +152,7 @@ def get_search_results(vectors, index, project, email):
     try:
         hits = []
 
-        req = requests.post(
+        request = requests.post(
             f"{SEARCH_URL}/indexes/{index}/search",
             data=json.dumps(
                 {
@@ -168,19 +168,18 @@ def get_search_results(vectors, index, project, email):
             verify=False,
         )
 
-        results = req.json()
+        response = request.json()
 
-        for result in results["results"]:
-            for hit in result["hits"]:
-                hits.append(
-                    {
-                        "id": hit["id"],
-                        "file": hit["file_path"],
-                        "content": hit["file_content"],
-                        "loc": hit["loc"],
-                        "score": hit["_semanticScore"] if "_semanticScore" in hit else 0,
-                    }
-                )
+        for hit in response["hits"]:
+            hits.append(
+                {
+                    "id": hit["id"],
+                    "file": hit["file_path"],
+                    "content": hit["file_content"],
+                    "loc": hit["loc"],
+                    "score": hit["_semanticScore"] if "_semanticScore" in hit else 0,
+                }
+            )
 
         return hits
     except Exception as e:
