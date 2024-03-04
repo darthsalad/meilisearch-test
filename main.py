@@ -1,3 +1,4 @@
+import traceback
 from web import get_google_search_results, navigate_and_extract, similarity_search
 from selenium.webdriver.firefox.options import Options
 from fastapi.middleware.cors import CORSMiddleware
@@ -115,7 +116,7 @@ async def search(request: Request):
     timer = time.time()
     try:
         data = await request.json()
-        
+
         email = data["email"]
         query = data["query"]
         index = data["index"]
@@ -149,7 +150,7 @@ async def search(request: Request):
                 "Authorization": f"Bearer {SEARCH_KEY}",
             }
         )
-        
+
         print(f"Time taken to search: {time.time() - timer} seconds")
         results = req.json()
         hits = []
@@ -174,7 +175,7 @@ async def search(request: Request):
             "results": hits,
         }
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
 
         return {
             "message": "Error",
