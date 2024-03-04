@@ -157,7 +157,10 @@ def get_search_results(vectors, index, project, email):
             data=json.dumps(
                 {
                     "vector": vectors,
-                    "filter": [f"project = {project}", f"email = {email}"],
+                    "filter": [
+                        f"project = {project}", 
+                        f"email = {email}"
+                    ],
                     "limit": 5,
                 }
             ),
