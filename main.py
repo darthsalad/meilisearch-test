@@ -141,7 +141,8 @@ async def search(request: Request):
         req = requests.post(
             f"{SEARCH_URL}/multi-search",
             data=json.dumps({
-                "queries": queries_array
+                "queries": queries_array,
+                "hybrid": {}
             }),
             headers={
                 "Content-Type": "application/json",
