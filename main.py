@@ -1,5 +1,5 @@
-import traceback
 from web import get_google_search_results, navigate_and_extract, similarity_search
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from selenium.webdriver.firefox.options import Options
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import AzureOpenAIEmbeddings
@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from project_loader import *
 from search import *
 import meilisearch
+import traceback
 import requests
 import json
 import time
@@ -122,38 +123,52 @@ async def search(request: Request):
         index = data["index"]
         projects = data["projects"]
 
-        queries_array = []
-
         query_embeddings = embeddings_1.embed_query(query)
 
-        for project in projects:
-            queries_array.append(
-                {
-                    "indexUid": index,
-                    "vector": query_embeddings,
-                    "filter": [
-                        f"project = {project}",
-                        f"email = {email}"
-                    ],
-                    "limit": 5,
-                }
-            )
+        hits = []
+        
+        with ThreadPoolExecutor(max_workers=len(projects)) as executor:
+            futures = [executor.submit(get_search_results, query_embeddings, index, project, email) for project in projects]
+
+            for future in as_completed(futures):
+                hits.extend(future.result())
+
+        print(f"Time taken to search: {time.time() - timer} seconds")
+
+        return {
+            "query": query,
+            "projects": projects,
+            "results": hits,
+        }
+    except Exception as e:
+        print(traceback.format_exc())
+
+        return {
+            "message": "Error",
+            "error": str(e)
+        }
+
+def get_search_results(vectors, index, project, email):
+    try:
+        hits = []
 
         req = requests.post(
-            f"{SEARCH_URL}/multi-search",
-            data=json.dumps({
-                "queries": queries_array,
-                "hybrid": {}
-            }),
+            f"{SEARCH_URL}/indexes/{index}/search",
+            data=json.dumps(
+                {
+                    "vector": vectors,
+                    "filter": [f"project = {project}", f"email = {email}"],
+                    "limit": 5,
+                }
+            ),
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {SEARCH_KEY}",
-            }
+            },
+            verify=False,
         )
 
-        print(f"Time taken to search: {time.time() - timer} seconds")
         results = req.json()
-        hits = []
 
         for result in results["results"]:
             for hit in result["hits"]:
@@ -167,21 +182,10 @@ async def search(request: Request):
                     }
                 )
 
-        print("Time taken:", time.time() - timer)
-
-        return {
-            "query": query,
-            "project": project,
-            "results": hits,
-        }
+        return hits
     except Exception as e:
-        print(traceback.format_exc())
-
-        return {
-            "message": "Error",
-            "error": str(e)
-        }
-
+        print(e)
+        raise Exception("Failed to get search results.")
 
 @app.get("/search")
 def search_internet(q: str):
