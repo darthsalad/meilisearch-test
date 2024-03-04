@@ -128,6 +128,7 @@ async def search(request: Request):
         for project in projects:
             queries_array.append(
                 {
+                    "indexUid": index,
                     "vector": query_embeddings,
                     "filter": [
                         f"project = {project}",
@@ -138,7 +139,7 @@ async def search(request: Request):
             )
 
         req = requests.post(
-            f"{SEARCH_URL}/indexes/{index}/multi-search",
+            f"{SEARCH_URL}/multi-search",
             data=json.dumps({
                 "queries": queries_array
             }),
