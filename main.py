@@ -86,12 +86,12 @@ async def add_kb(request: Request):
     timer = time.time()
 
     try:
-        embeddings_array = generate_embeddings(files, project, email, embeddings_array=[embeddings_1, embeddings_2])
+        generate_embeddings(files, project, email, embeddings_array=[embeddings_1, embeddings_2])
         print(f"Time taken to generate embeddings: {time.time() - timer} seconds")
 
         time.sleep(1)
 
-        upload_to_index(client, index, embeddings_array)
+        upload_to_index(client, index, "temp.json")
         print(f"Time taken to add documents: {time.time() - timer} seconds")
 
         os.remove("temp.json")
@@ -104,7 +104,7 @@ async def add_kb(request: Request):
         }
     except Exception as e:
         print(str(e))
-        
+
         return {
             "message": "Error",
             "error": str(e)
@@ -117,20 +117,29 @@ async def search(request: Request):
     data = await request.json()
 
     query = data["query"]
-    project = data["project"]
+    projects = data["projects"]
     index = data["index"]
+
+    queries_array = []
 
     try:
         query_embeddings = embeddings_1.embed_query(query)
 
+        for project in projects:
+            queries_array.append(
+                {
+                    "vector": query_embeddings,
+                    "filter": [
+                        f"project = {project}"
+                    ],
+                    "limit": 5,
+                }
+            )
+
         request = requests.post(
-            f"{SEARCH_URL}/indexes/{index}/search",
+            f"{SEARCH_URL}/indexes/{index}/multi-search",
             data=json.dumps({
-                "vector": query_embeddings, 
-                "filter": [
-                    f"project = {project}"
-                ],
-                "limit": 5,
+                "queries": queries_array,
             }),
             headers={
                 "Content-Type": "application/json",
@@ -139,20 +148,20 @@ async def search(request: Request):
             verify=False
         )
 
-        result = request.json()
-
+        results = request.json()
         hits = []
 
-        for hit in result["hits"]:
-            hits.append(
-                {
-                    "id": hit["id"],
-                    "file": hit["file_path"],
-                    "content": hit["file_content"],
-                    "loc": hit["loc"],
-                    "score": hit["_semanticScore"] if "_semanticScore" in hit else 0,
-                }
-            )
+        for result in results["results"]:
+            for hit in result["hits"]:
+                hits.append(
+                    {
+                        "id": hit["id"],
+                        "file": hit["file_path"],
+                        "content": hit["file_content"],
+                        "loc": hit["loc"],
+                        "score": hit["_semanticScore"] if "_semanticScore" in hit else 0,
+                    }
+                )
 
         print("Time taken:", time.time() - timer)
 
@@ -163,7 +172,7 @@ async def search(request: Request):
         }
     except Exception as e:
         print(str(e))
-        
+
         return {
             "message": "Error",
             "error": str(e)
@@ -175,7 +184,7 @@ def search_internet(q: str):
     start_time_main = time.time()
     try:
         res = get_google_search_results(q)
-        
+
         google_results_time = str(time.time() - start_time_main)
         print(f"Google results time: {google_results_time}")
 
@@ -207,7 +216,7 @@ def search_internet(q: str):
         }
     except Exception as e:
         print(str(e))
-        
+
         return {
             "message": "Error",
             "error": str(e)

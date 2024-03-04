@@ -62,12 +62,10 @@ def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenA
             for futures in as_completed(futures):
                 chunk_array.append(futures.result())
 
-        # with open("temp.json", "w", encoding="utf-8") as outfile:
-        #     json.dump(chunk_array, outfile)
+        with open("temp.json", "w", encoding="utf-8") as outfile:
+            json.dump(chunk_array, outfile)
         
         i = 0
-        
-        return chunk_array
     except Exception as e:
         print(str(e))
         raise Exception("Failed to generate embeddings.")
