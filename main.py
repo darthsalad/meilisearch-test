@@ -116,9 +116,11 @@ async def search(request: Request):
     timer = time.time()
     data = await request.json()
 
+    projects = []
+    
     query = data["query"]
     index = data["index"]
-    projects = json.loads(data["projects"])
+    projects.extend(data["projects"])
 
     queries_array = []
 
