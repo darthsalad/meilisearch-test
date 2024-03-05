@@ -179,6 +179,7 @@ def get_search_results(vectors, index, project, email):
                     "id": hit["id"],
                     "file": hit["file_path"],
                     "content": hit["file_content"],
+                    "project": hit["project"],
                     "loc": hit["loc"],
                     "score": hit["_semanticScore"] if "_semanticScore" in hit else 0,
                 }
