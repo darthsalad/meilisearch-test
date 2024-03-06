@@ -83,8 +83,6 @@ async def add_kb(request: Request):
             f"Time taken to generate and upload embeddings: {time.time() - timer} seconds"
         )
 
-        os.remove("temp.json")
-
         update_index_settings(index)
         print(f"Time taken to update settings: {time.time() - timer} seconds")
 
