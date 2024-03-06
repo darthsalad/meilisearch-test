@@ -64,7 +64,7 @@ app.add_middleware(
 def ping():
     return "Pong"
 
-@app.post("/add_kb", status_code=200)
+@app.post("/add_kb")
 async def add_kb(request: Request):
     data = await request.json()
 
