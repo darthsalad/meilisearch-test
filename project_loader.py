@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain_openai import AzureOpenAIEmbeddings
 from dotenv import load_dotenv
+from kb import upload_to_index
 from openai import AzureOpenAI
 from typing import List
 from uuid import uuid4
@@ -22,11 +23,10 @@ model = AzureOpenAI(
 
 i = 0
 
-
 def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmbeddings):
     global i
     i += 1
-    print(f"{i}  ::  ", file["name"])
+    # print(f"{i}  ::  ", file["name"])
     time.sleep(5)
     
     try:
@@ -50,7 +50,7 @@ def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmb
         print(e)
         raise Exception("Failed to generate embeddings.")
 
-def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenAIEmbeddings]):
+def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenAIEmbeddings], index):
     global i
     
     chunk_array = []
@@ -61,9 +61,15 @@ def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenA
 
             for futures in as_completed(futures):
                 chunk_array.append(futures.result())
+                print(f"{i}  ::  Embeddings generated for {len(chunk_array)} files.")
+                
+                upload_to_index(index, chunk_array)
+                
+                chunk_array = []
+                print(f"{i}  ::  Chunk uploaded to index.")
 
-        with open("temp.json", "w") as outfile:
-            json.dump(chunk_array, outfile)
+        # with open("temp.json", "w") as outfile:
+        #     json.dump(chunk_array, outfile)
         
         i = 0
     except Exception as e:

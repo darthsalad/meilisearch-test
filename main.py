@@ -5,20 +5,13 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import AzureOpenAIEmbeddings
 from selenium import webdriver
-from dotenv import load_dotenv
 from project_loader import *
-from search import *
-import meilisearch
 import traceback
+from kb import *
 import requests
 import json
 import time
 import os
-
-load_dotenv()
-
-SEARCH_URL = os.environ.get("SEARCH_HTTP_ADDR")
-SEARCH_KEY = os.environ.get("SEARCH_MASTER_KEY")
 
 DEPLOYMENT_NAME = os.environ.get("DEPLOYMENT_NAME_1")
 API_VERSION = os.environ.get("API_VERSION_1")
@@ -30,17 +23,13 @@ API_KEY_2 = os.environ.get("API_KEY_2")
 API_VERSION_2 = os.environ.get("API_VERSION_2")
 AZURE_ENDPOINT_2 = os.environ.get("AZURE_ENDPOINT_2")
 
-client = meilisearch.Client(
-    f"{SEARCH_URL}", f"{SEARCH_KEY}",
-)
-
 embeddings_1 = AzureOpenAIEmbeddings(
     azure_deployment=DEPLOYMENT_NAME,
     openai_api_version=API_VERSION,
     api_key=API_KEY,
     azure_endpoint=AZURE_ENDPOINT,
     dimensions=1536,
-    disallowed_special=()
+    disallowed_special=(),
 )
 
 embeddings_2 = AzureOpenAIEmbeddings(
@@ -49,7 +38,7 @@ embeddings_2 = AzureOpenAIEmbeddings(
     api_key=API_KEY_2,
     azure_endpoint=AZURE_ENDPOINT_2,
     dimensions=1536,
-    disallowed_special=()
+    disallowed_special=(),
 )
 
 firefox_options = Options()
@@ -61,14 +50,14 @@ for driver in drivers:
 
 app = FastAPI()
 
-origins = [ "*" ] 
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],  
+    allow_headers=["*"],
 )
 
 @app.get("/ping")
@@ -87,22 +76,19 @@ async def add_kb(request: Request):
     timer = time.time()
 
     try:
-        generate_embeddings(files, project, email, embeddings_array=[embeddings_1, embeddings_2])
-        print(f"Time taken to generate embeddings: {time.time() - timer} seconds")
-
-        time.sleep(1)
-
-        upload_to_index(client, index, "temp.json")
-        print(f"Time taken to add documents: {time.time() - timer} seconds")
+        generate_embeddings(
+            files, project, email, embeddings_array=[embeddings_1, embeddings_2], index=index
+        )
+        print(
+            f"Time taken to generate and upload embeddings: {time.time() - timer} seconds"
+        )
 
         os.remove("temp.json")
 
         update_index_settings(index)
         print(f"Time taken to update settings: {time.time() - timer} seconds")
 
-        return {
-            "message": "Content added successfully"
-        }
+        return {"message": "Content added successfully"}
     except Exception as e:
         print(traceback.format_exc())
 
@@ -123,9 +109,14 @@ async def search(request: Request):
         query_embeddings = embeddings_1.embed_query(query)
 
         hits = []
-        
+
         with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(get_search_results, query_embeddings, index, project, email) for project in projects]
+            futures = [
+                executor.submit(
+                    get_search_results, query_embeddings, index, project, email
+                )
+                for project in projects
+            ]
 
             for future in as_completed(futures):
                 hits.extend(future.result())
@@ -142,6 +133,7 @@ async def search(request: Request):
 
         raise HTTPException(status_code=500, detail=str(e))
 
+
 def get_search_results(vectors, index, project, email):
     try:
         results = []
@@ -151,10 +143,7 @@ def get_search_results(vectors, index, project, email):
             data=json.dumps(
                 {
                     "vector": vectors,
-                    "filter": [
-                        f"project = '{project}'", 
-                        f"email = '{email}'"
-                    ],
+                    "filter": [f"project = '{project}'", f"email = '{email}'"],
                     "limit": 5,
                 }
             ),
@@ -184,6 +173,7 @@ def get_search_results(vectors, index, project, email):
         print(traceback.format_exc())
 
         raise Exception("Failed to get search results.")
+
 
 @app.get("/search")
 def search_internet(q: str):
@@ -225,21 +215,18 @@ def search_internet(q: str):
 
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.delete("/delete_kb")
 async def delete_kb(request: Request):
     data = await request.json()
 
     email = data["email"]
     index = data["index"]
-    
+
     try:
-        client.index(index).delete_documents(
-            filter=f"email = '{email}'"
-        )
-        
-        return {
-            "message": "Content deleted successfully"
-        }
+        delete_by_email(index, email)
+
+        return {"message": "Content deleted successfully"}
     except Exception as e:
         print(e)
 
