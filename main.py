@@ -14,14 +14,14 @@ import time
 import os
 
 DEPLOYMENT_NAME = os.environ.get("DEPLOYMENT_NAME_1")
+AZURE_ENDPOINT = os.environ.get("AZURE_ENDPOINT_1")
 API_VERSION = os.environ.get("API_VERSION_1")
 API_KEY = os.environ.get("API_KEY_1")
-AZURE_ENDPOINT = os.environ.get("AZURE_ENDPOINT_1")
 
 DEPLOYMENT_NAME_2 = os.environ.get("DEPLOYMENT_NAME_2")
-API_KEY_2 = os.environ.get("API_KEY_2")
-API_VERSION_2 = os.environ.get("API_VERSION_2")
 AZURE_ENDPOINT_2 = os.environ.get("AZURE_ENDPOINT_2")
+API_VERSION_2 = os.environ.get("API_VERSION_2")
+API_KEY_2 = os.environ.get("API_KEY_2")
 
 embeddings_1 = AzureOpenAIEmbeddings(
     azure_deployment=DEPLOYMENT_NAME,
