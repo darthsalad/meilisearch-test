@@ -52,25 +52,22 @@ def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmb
 
 def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenAIEmbeddings], index):
     global i
-    
-    chunk_array = []
 
     try:
         with ThreadPoolExecutor(max_workers=50) as executor:
             futures = [executor.submit(generate_embedding_for_file, file, project, email, embeddings_array[index % 2]) for index, file in enumerate(files)]
 
             for futures in as_completed(futures):
+                chunk_array = []
+
                 chunk_array.append(futures.result())
-                print(f"{i}  ::  Embeddings generated")
-                
+                print(f"Chunks: {chunk_array}")
+                print(f"{i}  ::  Embeddings generated for {len(chunk_array)} files.")
+
                 upload_to_index(index, chunk_array)
 
                 print(f"{i}  ::  Chunk uploaded to index.")
-                chunk_array = []
 
-        # with open("temp.json", "w") as outfile:
-        #     json.dump(chunk_array, outfile)
-        
         i = 0
     except Exception as e:
         print(e)
