@@ -1,9 +1,9 @@
 from web import get_google_search_results, navigate_and_extract, similarity_search
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from selenium.webdriver.firefox.options import Options
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import AzureOpenAIEmbeddings
-from fastapi import FastAPI, Request
 from selenium import webdriver
 from dotenv import load_dotenv
 from project_loader import *
@@ -104,12 +104,9 @@ async def add_kb(request: Request):
             "message": "Content added successfully"
         }
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
 
-        return {
-            "message": "Error",
-            "error": str(e)
-        }
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/search")
@@ -143,10 +140,7 @@ async def search(request: Request):
     except Exception as e:
         print(traceback.format_exc())
 
-        return {
-            "message": "Error",
-            "error": str(e)
-        }
+        raise HTTPException(status_code=500, detail=str(e))
 
 def get_search_results(vectors, index, project, email):
     try:
@@ -187,7 +181,8 @@ def get_search_results(vectors, index, project, email):
 
         return results
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
+
         raise Exception("Failed to get search results.")
 
 @app.get("/search")
@@ -228,7 +223,24 @@ def search_internet(q: str):
     except Exception as e:
         print(e)
 
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/delete_kb")
+async def delete_kb(request: Request):
+    data = await request.json()
+
+    email = data["email"]
+    index = data["index"]
+    
+    try:
+        client.index(index).delete_documents(
+            filter=f"email = '{email}'"
+        )
+        
         return {
-            "message": "Error",
-            "error": str(e)
+            "message": "Content deleted successfully"
         }
+    except Exception as e:
+        print(e)
+
+        raise HTTPException(status_code=500, detail=str(e))
