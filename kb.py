@@ -19,7 +19,7 @@ def upload_to_index(index_name, documents):
     try:
         if index_name:
             client.index(index_name).add_documents(documents)
-            print("Documents added successfully.")
+            # print("Documents added successfully.")
         else:
             raise Exception("Index name and file name are required.")
     except Exception as e:

@@ -56,17 +56,17 @@ def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenA
     chunk_array = []
 
     try:
-        with ThreadPoolExecutor(max_workers=30) as executor:
+        with ThreadPoolExecutor(max_workers=50) as executor:
             futures = [executor.submit(generate_embedding_for_file, file, project, email, embeddings_array[index % 2]) for index, file in enumerate(files)]
 
             for futures in as_completed(futures):
                 chunk_array.append(futures.result())
-                print(f"{i}  ::  Embeddings generated for {len(chunk_array)} files.")
+                print(f"{i}  ::  Embeddings generated")
                 
                 upload_to_index(index, chunk_array)
-                
-                chunk_array = []
+
                 print(f"{i}  ::  Chunk uploaded to index.")
+                chunk_array = []
 
         # with open("temp.json", "w") as outfile:
         #     json.dump(chunk_array, outfile)
