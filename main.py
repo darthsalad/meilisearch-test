@@ -64,7 +64,7 @@ app.add_middleware(
 def ping():
     return "Pong"
 
-@app.post("/add_kb")
+@app.post("/add_kb", status_code=200)
 async def add_kb(request: Request):
     data = await request.json()
 
@@ -93,7 +93,7 @@ async def add_kb(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/search")
+@app.post("/search", status_code=200)
 async def search(request: Request):
     timer = time.time()
     try:
@@ -173,7 +173,7 @@ def get_search_results(vectors, index, project, email):
         raise Exception("Failed to get search results.")
 
 
-@app.get("/search")
+@app.get("/search", status_code=200)
 def search_internet(q: str):
     start_time_main = time.time()
     try:
@@ -214,7 +214,7 @@ def search_internet(q: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/delete_kb")
+@app.delete("/delete_kb", status_code=200)
 async def delete_kb(request: Request):
     data = await request.json()
 
