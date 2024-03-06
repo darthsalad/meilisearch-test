@@ -61,8 +61,7 @@ def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenA
                 chunk_array = []
 
                 chunk_array.append(futures.result())
-                print(f"Chunks: {chunk_array}")
-                print(f"{i}  ::  Embeddings generated for {len(chunk_array)} files.")
+                print(f"{i}  ::  Embeddings generated for {len(chunk_array)} file(s).")
 
                 upload_to_index(index, chunk_array)
 
