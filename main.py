@@ -164,23 +164,24 @@ async def search(request: Request):
 
         email = data["email"]
         query = data["query"]
-        index = data["index"]
         projects = data["projects"]
+        indexes=["code-store", "web-store"]
 
         query_embeddings = embeddings_1.embed_query(query)
 
         hits = []
 
-        with ThreadPoolExecutor() as executor:
-            futures = [
-                executor.submit(
-                    get_search_results, query_embeddings, index, project, email
-                )
-                for project in projects
-            ]
+        for index in indexes:
+            with ThreadPoolExecutor() as executor:
+                futures = [
+                    executor.submit(
+                        get_search_results, query_embeddings, index, project, email
+                    )
+                    for project in projects
+                ]
 
-            for future in as_completed(futures):
-                hits.extend(future.result())
+                for future in as_completed(futures):
+                    hits.extend(future.result())
 
         print(f"Time taken to search: {time.time() - timer} seconds")
 
