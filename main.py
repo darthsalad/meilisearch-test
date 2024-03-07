@@ -141,13 +141,13 @@ async def kb_codebase(request: Request):
         )
         print(f"Time taken to generate embeddings: {time.time() - timer} seconds")
 
-        xyz = update_index_settings(index)
-        print(xyz)
+        update_index_settings(index)
         print(f"Time taken to update settings: {time.time() - timer} seconds")
 
         return {
             "message": "Content added successfully"
         }
+        print("123")
     except Exception as e:
         print(traceback.format_exc())
 
