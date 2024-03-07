@@ -141,7 +141,8 @@ async def kb_codebase(request: Request):
         )
         print(f"Time taken to generate embeddings: {time.time() - timer} seconds")
 
-        update_index_settings(index)
+        xyz = update_index_settings(index)
+        print(xyz)
         print(f"Time taken to update settings: {time.time() - timer} seconds")
 
         return {
