@@ -4,6 +4,7 @@ from selenium.webdriver.firefox.options import Options
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import AzureOpenAIEmbeddings
+from fastapi.responses import StreamingResponse
 from selenium import webdriver
 from project_loader import *
 import traceback
@@ -60,9 +61,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/ping")
 def ping():
     return "Pong"
+
 
 @app.post("/add_kb")
 async def add_kb(request: Request):
@@ -76,17 +79,17 @@ async def add_kb(request: Request):
     timer = time.time()
 
     try:
-        generate_embeddings(
-            files, project, email, embeddings_array=[embeddings_1, embeddings_2], index=index
+        return StreamingResponse(
+            generate_embeddings(
+                files,
+                project,
+                email,
+                embeddings_array=[embeddings_1, embeddings_2],
+                index=index,
+                timer=timer,
+            ),
+            status_code=200,
         )
-        print(
-            f"Time taken to generate and upload embeddings: {time.time() - timer} seconds"
-        )
-
-        update_index_settings(index)
-        print(f"Time taken to update settings: {time.time() - timer} seconds")
-
-        return {"message": "Content added successfully"}
     except Exception as e:
         print(traceback.format_exc())
 

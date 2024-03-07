@@ -1,11 +1,10 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from kb import update_index_settings, upload_to_index
 from langchain_openai import AzureOpenAIEmbeddings
 from dotenv import load_dotenv
-from kb import upload_to_index
 from openai import AzureOpenAI
 from typing import List
 from uuid import uuid4
-import json
 import time
 import os
 
@@ -50,7 +49,7 @@ def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmb
         print(e)
         raise Exception("Failed to generate embeddings.")
 
-def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenAIEmbeddings], index):
+def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenAIEmbeddings], index, timer):
     global i
 
     try:
@@ -64,10 +63,19 @@ def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenA
                 print(f"{i}  ::  Embeddings generated for {len(chunk_array)} file(s).")
 
                 upload_to_index(index, chunk_array)
-
                 print(f"{i}  ::  Chunk uploaded to index.")
 
+                yield f"{i}/{len(files)} documents uploaded to index."
+
         i = 0
+
+        print(
+            f"Time taken to generate and upload embeddings: {time.time() - timer} seconds"
+        )
+
+        update_index_settings(index)
+
+        yield f"Completed! {len(files)} documents uploaded to index."
     except Exception as e:
         print(e)
         raise Exception("Failed to generate embeddings.")
