@@ -144,12 +144,9 @@ async def kb_codebase(request: Request):
         update_index_settings(index)
         print(f"Time taken to update settings: {time.time() - timer} seconds")
 
-        return JSONResponse(
-            content={
-                "message": "Content added successfully",
-            },
-            status_code=200,
-        )
+        return {
+            "message": "Content added successfully"
+        }
     except Exception as e:
         print(traceback.format_exc())
 
