@@ -4,7 +4,8 @@ from selenium.webdriver.firefox.options import Options
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import AzureOpenAIEmbeddings
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse
+from utils import check_user_project
 from selenium import webdriver
 from project_loader import *
 import traceback
@@ -67,27 +68,34 @@ def ping():
     return "Pong"
 
 
-@app.post("/add_kb")
+@app.post("add_kb")
 async def add_kb(request: Request):
     data = await request.json()
 
     email = data["email"]
     files = data["files"]
-    project = data["project"]
     index = data["index"]
-
+    project = data["project"]
+    
     timer = time.time()
-
+    
     try:
-        return StreamingResponse(
-            generate_embeddings(
-                files,
-                project,
-                email,
-                embeddings_array=[embeddings_1, embeddings_2],
-                index=index,
-                timer=timer,
-            ),
+        generate_embeddings(
+            files,
+            [project],
+            email,
+            embeddings_array=[embeddings_1, embeddings_2],
+            index=index
+        )
+        print(f"Time taken to generate embeddings: {time.time() - timer} seconds")
+
+        update_index_settings(index)
+        print(f"Time taken to update settings: {time.time() - timer} seconds")
+
+        return JSONResponse(
+            content={
+                "message": "Content added successfully",
+            },
             status_code=200,
         )
     except Exception as e:
@@ -96,7 +104,59 @@ async def add_kb(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/search", status_code=200)
+@app.post("/kb/codebase")
+async def kb_codebase(request: Request):
+    data = await request.json()
+
+    email = data["email"]
+    files = data["files"]
+    index = data["index"]
+    product = data["product"]
+    projects = data["projects"]
+
+    timer = time.time()
+
+    try:
+        status = check_user_project(email, projects, product)
+        if status == 401:
+            raise HTTPException(
+                status_code=401, detail="User not authorized for this feature."
+            )
+        elif status == 429:
+            raise HTTPException(
+                status_code=429, detail="User has exceeded the number of projects for knowledge base."
+            )
+        elif status == 500:
+            raise HTTPException(
+                status_code=500, detail="Failed to check user."
+            )
+        print(f"Time taken to check user: {time.time() - timer} seconds")
+
+        generate_embeddings(
+            files,
+            projects,
+            email,
+            embeddings_array=[embeddings_1, embeddings_2],
+            index=index
+        )
+        print(f"Time taken to generate embeddings: {time.time() - timer} seconds")
+
+        update_index_settings(index)
+        print(f"Time taken to update settings: {time.time() - timer} seconds")
+
+        return JSONResponse(
+            content={
+                "message": "Content added successfully",
+            },
+            status_code=200,
+        )
+    except Exception as e:
+        print(traceback.format_exc())
+
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/kb/search", status_code=200)
 async def search(request: Request):
     timer = time.time()
     try:
@@ -217,15 +277,15 @@ def search_internet(q: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/delete_kb", status_code=200)
+@app.delete("/kb/delete", status_code=200)
 async def delete_kb(request: Request):
     data = await request.json()
 
     email = data["email"]
-    index = data["index"]
 
     try:
-        delete_by_email(index, email)
+        delete_by_email("code-store", email)
+        delete_by_email("web-store", email)
 
         return {"message": "Content deleted successfully"}
     except Exception as e:

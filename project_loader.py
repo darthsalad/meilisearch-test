@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from kb import update_index_settings, upload_to_index
 from langchain_openai import AzureOpenAIEmbeddings
 from dotenv import load_dotenv
+from kb import upload_to_index
 from openai import AzureOpenAI
 from typing import List
 from uuid import uuid4
@@ -22,7 +22,7 @@ model = AzureOpenAI(
 
 i = 0
 
-def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmbeddings):
+def generate_embedding_for_file(file, projects, email, embeddings: AzureOpenAIEmbeddings):
     global i
     i += 1
     # print(f"{i}  ::  ", file["name"])
@@ -40,7 +40,7 @@ def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmb
             "loc": file["loc"],
             # "keywords": generate_keywords(file["content"]),
             "_vectors": {"custom": content_embedding},
-            "project": project,
+            "project": [project for project in projects if project in file["name"]],
             "email": email,
         }
 
@@ -49,12 +49,12 @@ def generate_embedding_for_file(file, project, email, embeddings: AzureOpenAIEmb
         print(e)
         raise Exception("Failed to generate embeddings.")
 
-def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenAIEmbeddings], index, timer):
+def generate_embeddings(files, projects, email, embeddings_array: List[AzureOpenAIEmbeddings], index):
     global i
 
     try:
         with ThreadPoolExecutor(max_workers=50) as executor:
-            futures = [executor.submit(generate_embedding_for_file, file, project, email, embeddings_array[index % 2]) for index, file in enumerate(files)]
+            futures = [executor.submit(generate_embedding_for_file, file, projects, email, embeddings_array[index % 2]) for index, file in enumerate(files)]
 
             for futures in as_completed(futures):
                 chunk_array = []
@@ -65,17 +65,7 @@ def generate_embeddings(files, project, email, embeddings_array: List[AzureOpenA
                 upload_to_index(index, chunk_array)
                 print(f"{i}  ::  Chunk uploaded to index.")
 
-                yield f"{i}/{len(files)} documents uploaded to index."
-
         i = 0
-
-        print(
-            f"Time taken to generate and upload embeddings: {time.time() - timer} seconds"
-        )
-
-        update_index_settings(index)
-
-        yield f"Completed! {len(files)} documents uploaded to index."
     except Exception as e:
         print(e)
         raise Exception("Failed to generate embeddings.")
