@@ -153,6 +153,9 @@ async def kb_codebase(request: Request):
 
         raise HTTPException(status_code=500, detail=str(e))
 
+    print("Reached the end")
+    return True
+
 
 @app.post("/kb/search", status_code=200)
 async def search(request: Request):
