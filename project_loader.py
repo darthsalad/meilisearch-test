@@ -53,7 +53,7 @@ def generate_embeddings(files, projects, email, embeddings_array: List[AzureOpen
     global i
 
     try:
-        with ThreadPoolExecutor(max_workers=50) as executor:
+        with ThreadPoolExecutor(max_workers=20) as executor:
             futures = [executor.submit(generate_embedding_for_file, file, projects, email, embeddings_array[index % 2]) for index, file in enumerate(files)]
 
             for futures in as_completed(futures):
