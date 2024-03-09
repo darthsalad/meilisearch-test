@@ -313,7 +313,7 @@ def search_internet(q: str):
             "links": [res["organic_search_results"][i]["link"] for i in range(3)],
         }
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
 
         raise HTTPException(status_code=500, detail=str(e))
 

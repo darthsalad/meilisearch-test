@@ -1,4 +1,3 @@
-from operator import index
 from dotenv import load_dotenv
 import meilisearch
 import requests
