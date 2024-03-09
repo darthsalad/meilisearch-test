@@ -257,7 +257,6 @@ def get_search_results(vectors, index, project, email):
         )
 
         res = request.json()
-        print(res)
 
         for hit in res["hits"]:
             results.append(
