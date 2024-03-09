@@ -206,7 +206,7 @@ async def search(request: Request):
         email = data["email"]
         query = data["query"]
         projects = data["projects"]
-        index=["code-store"]
+        index="code-store"
 
         query_embeddings = embeddings_1.embed_query(query)
 
