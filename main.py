@@ -132,6 +132,9 @@ async def kb_codebase(request: Request):
             )
         print(f"Time taken to check user: {time.time() - timer} seconds")
 
+        with open(f"files/{email}-{projects[0]}.json", "w") as f:
+            json.dump({"status": False}, f)
+
         generate_embeddings(
             files,
             projects,
@@ -144,10 +147,12 @@ async def kb_codebase(request: Request):
         update_index_settings(index)
         print(f"Time taken to update settings: {time.time() - timer} seconds")
 
+        with open(f"files/{email}-{projects[0]}.json", "w") as f:
+            json.dump({"status": True}, f)
+
         return {
             "message": "Content added successfully"
         }
-        print("123")
     except Exception as e:
         print(traceback.format_exc())
 
@@ -156,6 +161,41 @@ async def kb_codebase(request: Request):
     print("Reached the end")
     return True
 
+
+@app.get("/upload/{file_path}", status_code=200)
+async def upload_file(file_path: str):
+    try:
+        if os.path.exists(f"files/{file_path}.json"):
+            with open(f"files/{file_path}.json", "r") as f:
+                status = json.load(f)["status"]
+
+            if status:
+                os.remove(f"files/{file_path}.json")
+                return JSONResponse(
+                    content={
+                        "status": True,
+                    },
+                    status_code=200,
+                )
+            else:
+                return JSONResponse(
+                    content={
+                        "status": False,
+                    },
+                    status_code=200,
+                )
+
+        else:
+            return JSONResponse(
+                content={
+                    "status": True,
+                },
+                status_code=200,
+            )
+    except Exception as e:
+        print(traceback.format_exc())
+
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/kb/search", status_code=200)
 async def search(request: Request):
@@ -166,23 +206,22 @@ async def search(request: Request):
         email = data["email"]
         query = data["query"]
         projects = data["projects"]
-        indexes=["code-store", "web-store"]
+        index=["code-store"]
 
         query_embeddings = embeddings_1.embed_query(query)
 
         hits = []
 
-        for index in indexes:
-            with ThreadPoolExecutor() as executor:
-                futures = [
-                    executor.submit(
-                        get_search_results, query_embeddings, index, project, email
-                    )
-                    for project in projects
-                ]
+        with ThreadPoolExecutor() as executor:
+            futures = [
+                executor.submit(
+                    get_search_results, query_embeddings, index, project, email
+                )
+                for project in projects
+            ]
 
-                for future in as_completed(futures):
-                    hits.extend(future.result())
+            for future in as_completed(futures):
+                hits.extend(future.result())
 
         print(f"Time taken to search: {time.time() - timer} seconds")
 
@@ -218,6 +257,7 @@ def get_search_results(vectors, index, project, email):
         )
 
         res = request.json()
+        print(res)
 
         for hit in res["hits"]:
             results.append(
@@ -235,7 +275,7 @@ def get_search_results(vectors, index, project, email):
     except Exception as e:
         print(traceback.format_exc())
 
-        raise Exception("Failed to get search results.")
+        raise Exception("Failed to get search results.", str(e))
 
 
 @app.get("/search", status_code=200)
@@ -287,7 +327,7 @@ async def delete_kb(request: Request):
 
     try:
         delete_by_email("code-store", email)
-        delete_by_email("web-store", email)
+        # delete_by_email("web-store", email)
 
         return {"message": "Content deleted successfully"}
     except Exception as e:
