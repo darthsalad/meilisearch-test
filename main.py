@@ -30,7 +30,7 @@ embeddings_1 = AzureOpenAIEmbeddings(
     openai_api_version=API_VERSION,
     api_key=API_KEY,
     azure_endpoint=AZURE_ENDPOINT,
-    dimensions=1536,
+    # dimensions=1536,
     disallowed_special=(),
 )
 
@@ -39,7 +39,7 @@ embeddings_2 = AzureOpenAIEmbeddings(
     openai_api_version=API_VERSION_2,
     api_key=API_KEY_2,
     azure_endpoint=AZURE_ENDPOINT_2,
-    dimensions=1536,
+    # dimensions=1536,
     disallowed_special=(),
 )
 
