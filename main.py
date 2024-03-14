@@ -68,7 +68,7 @@ def ping():
     return "Pong"
 
 
-@app.post("add_kb")
+@app.post("/add_kb")
 async def add_kb(request: Request):
     data = await request.json()
 
