@@ -51,9 +51,17 @@ def update_index_settings(index_name):
         print(e)
         raise Exception("Failed to update settings.")
 
-def delete_by_email(index_name, email):
+def delete_all(index_name, email):
     try:
         client.index(index_name).delete_documents(filter=f"email = '{email}'")
+        print("Documents deleted successfully.")
+    except Exception as e:
+        print(e)
+        raise Exception("Failed to delete documents.")
+
+def delete_project(index_name, email, project):
+    try:
+        client.index(index_name).delete_documents(filter=f"email = '{email}' AND project = '{project}'")
         print("Documents deleted successfully.")
     except Exception as e:
         print(e)

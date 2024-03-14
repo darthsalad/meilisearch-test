@@ -325,8 +325,23 @@ async def delete_kb(request: Request):
     email = data["email"]
 
     try:
-        delete_by_email("code-store", email)
+        delete_all("code-store", email)
         # delete_by_email("web-store", email)
+
+        return {"message": "Content deleted successfully"}
+    except Exception as e:
+        print(e)
+
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/kb/delete/{project}", status_code=200)
+async def delete_kb(request: Request, project: str):
+    data = await request.json()
+
+    email = data["email"]
+
+    try:
+        delete_project("code-store", email, project)
 
         return {"message": "Content deleted successfully"}
     except Exception as e:
