@@ -334,11 +334,13 @@ async def delete_kb(request: Request):
 
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/kb/delete/{project}", status_code=200)
-async def delete_kb(request: Request, project: str):
+
+@app.post("/kb/delete", status_code=200)
+async def delete_kb(request: Request):
     data = await request.json()
 
     email = data["email"]
+    project = data["project"]
 
     try:
         delete_project("code-store", email, project)
