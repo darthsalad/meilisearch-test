@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import AzureOpenAIEmbeddings
 from fastapi.responses import JSONResponse
-from utils import check_user_project
+from utils import check_user_project, delete_user_project
 from selenium import webdriver
 from project_loader import *
 import traceback
@@ -341,8 +341,23 @@ async def delete_kb(request: Request):
 
     email = data["email"]
     project = data["project"]
+    product = data["product"]
 
     try:
+        status = delete_user_project(email, project, product)
+        if status == 401:
+            raise HTTPException(
+                status_code=401, detail="User not authorized for this feature."
+            )
+        elif status == 404:
+            raise HTTPException(
+                status_code=404, detail="Project not found."
+            )
+        elif status == 500:
+            raise HTTPException(
+                status_code=500, detail="Failed to check user."
+            )
+
         delete_project("code-store", email, project)
 
         return {"message": "Content deleted successfully"}
