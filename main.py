@@ -335,7 +335,7 @@ async def delete_kb(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/kb/delete/single", status_code=200)
+@app.post("/kb/delete/single", status_code=200)
 async def delete_kb(request: Request):
     data = await request.json()
 
